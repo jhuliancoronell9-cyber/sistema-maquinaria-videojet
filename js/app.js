@@ -32,154 +32,122 @@ const maquinasDB = [
   }
 ];
 
+// ----- CREAR TARJETA -----
 function crearCard(m, isLocal = false, index = null) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
 
-  let botonEliminar = "";
-  if (isLocal) {
-    botonEliminar = `<button class="btn btn-danger w-100 mt-2" onclick="eliminarMaquina(${index})">
-                        Eliminar
-                     </button>`;
-  }
+  // Diferenciar tarjetas locales con un borde o fondo
+  const cardClass = isLocal ? "card shadow-sm h-100 border border-success" : "card shadow-sm h-100";
 
   col.innerHTML = `
-    <div class="card shadow-sm h-100">
+    <div class="${cardClass}">
       <img src="${m.imagen}" class="card-img-top" alt="${m.nombre}">
       <div class="card-body">
         <h5 class="card-title">${m.nombre}</h5>
         <p class="card-text"><strong>Código:</strong> ${m.codigo}</p>
-        <button class="btn btn-primary w-100" onclick="verDetalle(${m.id})">
-          Ver detalles
-        </button>
-        ${botonEliminar}
+        <button class="btn btn-primary w-100 ver-detalle">Ver detalles</button>
       </div>
     </div>
   `;
+
+  col.querySelector(".ver-detalle").addEventListener("click", () => verDetalle(m.id));
+
+  if (isLocal) {
+    const btn = document.createElement("button");
+    btn.className = "btn btn-danger w-100 mt-2";
+    btn.textContent = "Eliminar";
+    btn.addEventListener("click", () => eliminarMaquina(index));
+    col.querySelector(".card-body").appendChild(btn);
+  }
+
   return col;
 }
 
+// ----- ELIMINAR MÁQUINA LOCAL -----
 function eliminarMaquina(index) {
   let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-  lista.splice(index, 1); // elimina la máquina del array
+  lista.splice(index, 1);
   localStorage.setItem("maquinas", JSON.stringify(lista));
-  renderCatalogo(); // vuelve a renderizar el catálogo
+  renderCatalogo();
 }
 
+// ----- RENDERIZAR CATÁLOGO -----
 function renderCatalogo() {
   const cont = document.getElementById("catalogoLista");
   if (!cont) return;
+  cont.innerHTML = "";
 
-  cont.innerHTML = "<h3>Catálogo</h3>";
-  // Máquinas base
+  // Título catálogo base
+  const tituloBase = document.createElement("h3");
+  tituloBase.textContent = "Catálogo";
+  cont.appendChild(tituloBase);
   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
 
-  // Máquinas registradas por el usuario
+  // Máquinas registradas
   let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
   if (lista.length > 0) {
-    const titulo = document.createElement("h3");
-    titulo.textContent = "Máquinas Registradas";
-    titulo.className = "mt-4";
-    cont.appendChild(titulo);
+    const tituloLocal = document.createElement("h3");
+    tituloLocal.textContent = "Máquinas Registradas";
+    tituloLocal.className = "mt-5 text-success"; // verde para diferenciar
+    cont.appendChild(tituloLocal);
 
     lista.forEach((m, index) => {
       const maquinaLocal = {
         id: 100 + index,
         nombre: m.nombre,
         codigo: m.serie,
-        imagen: "./imagenes/registro.png"
+        imagen: "imagenes/registro.png"
       };
       cont.appendChild(crearCard(maquinaLocal, true, index));
     });
   }
 }
 
+// ----- VER DETALLE -----
 function verDetalle(id) {
   window.location.href = `detalle.html?id=${id}`;
 }
 
+// ----- CARGAR DETALLE -----
 function cargarDetalle() {
   const params = new URLSearchParams(window.location.search);
   const id = parseInt(params.get("id"));
-
   const m = maquinasDB.find(x => x.id === id);
 
-  if (!m) {
-    document.querySelector(".container").innerHTML +=
-      "<p>No se encontró información de la máquina.</p>";
-    return;
-  }
+  if (!m) return;
 
   const imgDetalle = document.getElementById("detalle-imagen");
-imgDetalle.src = m.imagen;
-imgDetalle.onclick = () => abrirImagen(m.imagen);
-  // document.getElementById("detalle-imagen").src = m.imagen;
-  document.getElementById("detalle-nombre").textContent = m.nombre;
-  document.getElementById("detalle-tecnologia").textContent = m.tecnologia;
-  document.getElementById("detalle-materiales").textContent = m.materiales;
-  document.getElementById("detalle-codigo").textContent = m.codigo;
-  document.getElementById("detalle-descripcion").textContent = m.descripcion;
-}
-
-function buscarPorSerie() {
-  const serie = document.getElementById("inputSerie").value.toLowerCase();
-  const cont = document.getElementById("resultadoSerie");
-  cont.innerHTML = "";
-
-  const resultados = maquinasDB.filter(m =>
-    m.codigo.toLowerCase().includes(serie)
-  );
-
-  if (resultados.length === 0) {
-    cont.innerHTML = "<p>No se encontraron resultados.</p>";
-    return;
+  if (imgDetalle) {
+    imgDetalle.src = m.imagen;
+    imgDetalle.onclick = () => abrirImagen(m.imagen);
   }
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  resultados.forEach(m => row.appendChild(crearCard(m)));
-  cont.appendChild(row);
+  const nombres = ["detalle-nombre","detalle-tecnologia","detalle-materiales","detalle-codigo","detalle-descripcion"];
+  const valores = [m.nombre, m.tecnologia, m.materiales, m.codigo, m.descripcion];
+  nombres.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = valores[i];
+  });
 }
 
-function buscarAvanzado() {
-  const tipo = document.getElementById("tipo").value.toLowerCase();
-  const tecnologia = document.getElementById("tecnologia").value.toLowerCase();
-  const material = document.getElementById("material").value.toLowerCase();
-
-  const cont = document.getElementById("resultadosAvanzados");
-  cont.innerHTML = "";
-
-  const resultados = maquinasDB.filter(m =>
-    (!tipo || m.tipo.toLowerCase() === tipo) &&
-    (!tecnologia || m.tecnologia.toLowerCase().includes(tecnologia)) &&
-    (!material || m.materiales.toLowerCase().includes(material))
-  );
-
-  if (resultados.length === 0) {
-    cont.innerHTML = "<p>No hay coincidencias.</p>";
-    return;
-  }
-
-  const row = document.createElement("div");
-  row.className = "row";
-
-  resultados.forEach(m => row.appendChild(crearCard(m)));
-  cont.appendChild(row);
+// ----- VISOR DE IMAGEN -----
+function abrirImagen(src) {
+  const visor = document.getElementById("visorImagen");
+  const img = document.getElementById("imagenGrande");
+  if (!visor || !img) return;
+  img.src = src;
+  visor.style.display = "flex";
+}
+function cerrarImagen() {
+  const visor = document.getElementById("visorImagen");
+  if (visor) visor.style.display = "none";
 }
 
+// ----- EVENTO DOMContentLoaded -----
 document.addEventListener("DOMContentLoaded", () => {
   renderCatalogo();
   cargarDetalle();
 });
-
-function abrirImagen(src) {
-  const visor = document.getElementById("visorImagen");
-  const img = document.getElementById("imagenGrande");
-
-  img.src = src;
-  visor.style.display = "flex";
-}
 
 function cerrarImagen() {
   document.getElementById("visorImagen").style.display = "none";
