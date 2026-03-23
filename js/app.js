@@ -27,15 +27,17 @@ function crearCard(m, isLocal = false, index = null) {
   const body = col.querySelector(".card-body");
 
   if (isLocal) {
-    // Botones juntos en fila
+    // Contenedor de botones en fila
     const btnContainer = document.createElement("div");
     btnContainer.className = "d-flex justify-content-between mt-3";
 
+    // Botón Ver Detalles
     const btnDetalle = document.createElement("button");
     btnDetalle.className = "btn btn-primary btn-sm flex-grow-1 me-2";
     btnDetalle.textContent = "Ver detalles";
     btnDetalle.addEventListener("click", () => verDetalle(m.id));
 
+    // Botón Eliminar con confirmación
     const btnEliminar = document.createElement("button");
     btnEliminar.className = "btn btn-danger btn-sm flex-grow-1";
     btnEliminar.textContent = "Eliminar";
@@ -48,6 +50,7 @@ function crearCard(m, isLocal = false, index = null) {
     btnContainer.appendChild(btnDetalle);
     btnContainer.appendChild(btnEliminar);
     body.appendChild(btnContainer);
+
   } else {
     // Para máquinas de la DB: botón grande
     const btnDetalle = document.createElement("button");
