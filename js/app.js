@@ -11,6 +11,7 @@ const maquinasDB = [
 function crearCard(m, isLocal = false, index = null) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
+
   const cardClass = isLocal ? "card shadow-sm h-100 border border-success" : "card shadow-sm h-100";
 
   col.innerHTML = `
@@ -19,19 +20,41 @@ function crearCard(m, isLocal = false, index = null) {
       <div class="card-body">
         <h5 class="card-title">${m.nombre}</h5>
         <p class="card-text"><strong>Código:</strong> ${m.codigo}</p>
-        <button class="btn btn-primary w-100 ver-detalle">Ver detalles</button>
       </div>
     </div>
   `;
 
-  col.querySelector(".ver-detalle").addEventListener("click", () => verDetalle(m.id));
+  const body = col.querySelector(".card-body");
 
   if (isLocal) {
-    const btn = document.createElement("button");
-    btn.className = "btn btn-danger w-100 mt-2";
-    btn.textContent = "Eliminar";
-    btn.addEventListener("click", () => eliminarMaquina(index));
-    col.querySelector(".card-body").appendChild(btn);
+    // Botones juntos en fila
+    const btnContainer = document.createElement("div");
+    btnContainer.className = "d-flex justify-content-between mt-3";
+
+    const btnDetalle = document.createElement("button");
+    btnDetalle.className = "btn btn-primary btn-sm flex-grow-1 me-2";
+    btnDetalle.textContent = "Ver detalles";
+    btnDetalle.addEventListener("click", () => verDetalle(m.id));
+
+    const btnEliminar = document.createElement("button");
+    btnEliminar.className = "btn btn-danger btn-sm flex-grow-1";
+    btnEliminar.textContent = "Eliminar";
+    btnEliminar.addEventListener("click", () => {
+      if (confirm(`¿Estás seguro que deseas eliminar "${m.nombre}"?`)) {
+        eliminarMaquina(index);
+      }
+    });
+
+    btnContainer.appendChild(btnDetalle);
+    btnContainer.appendChild(btnEliminar);
+    body.appendChild(btnContainer);
+  } else {
+    // Para máquinas de la DB: botón grande
+    const btnDetalle = document.createElement("button");
+    btnDetalle.className = "btn btn-primary w-100 mt-2";
+    btnDetalle.textContent = "Ver detalles";
+    btnDetalle.addEventListener("click", () => verDetalle(m.id));
+    body.appendChild(btnDetalle);
   }
 
   return col;
