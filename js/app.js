@@ -204,19 +204,3 @@ function cerrarImagen() {
   document.getElementById("visorImagen").style.display = "none";
 }
 
-let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-
-let contenedor = document.getElementById("catalogoLista");
-
-lista.forEach(m => {
-contenedor.innerHTML += `
-<div class="col-md-4">
-<div class="card p-3 mb-3">
-<h5>${m.nombre}</h5>
-<p>Serie: ${m.serie}</p>
-<p>Tipo: ${m.tipo}</p>
-<p>Estado: ${m.estado}</p>
-</div>
-</div>
-`;
-});
