@@ -32,9 +32,16 @@ const maquinasDB = [
   }
 ];
 
-function crearCard(m) {
+function crearCard(m, isLocal = false, index = null) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
+
+  let botonEliminar = "";
+  if (isLocal) {
+    botonEliminar = `<button class="btn btn-danger w-100 mt-2" onclick="eliminarMaquina(${index})">
+                        Eliminar
+                     </button>`;
+  }
 
   col.innerHTML = `
     <div class="card shadow-sm h-100">
@@ -45,43 +52,47 @@ function crearCard(m) {
         <button class="btn btn-primary w-100" onclick="verDetalle(${m.id})">
           Ver detalles
         </button>
+        ${botonEliminar}
       </div>
     </div>
   `;
   return col;
 }
 
+function eliminarMaquina(index) {
+  let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+  lista.splice(index, 1); // elimina la máquina del array
+  localStorage.setItem("maquinas", JSON.stringify(lista));
+  renderCatalogo(); // vuelve a renderizar el catálogo
+}
+
 function renderCatalogo() {
   const cont = document.getElementById("catalogoLista");
   if (!cont) return;
 
-  cont.innerHTML = "";
-
+  cont.innerHTML = "<h3>Catálogo</h3>";
   // Máquinas base
   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
 
   // Máquinas registradas por el usuario
   let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+  if (lista.length > 0) {
+    const titulo = document.createElement("h3");
+    titulo.textContent = "Máquinas Registradas";
+    titulo.className = "mt-4";
+    cont.appendChild(titulo);
 
-  lista.forEach((m, index) => {
-    const maquinaLocal = {
-      id: 100 + index,
-      nombre: m.nombre,
-      codigo: m.serie,
-      imagen: "./imagenes/cij-1880.png"
-    };
-
-    cont.appendChild(crearCard(maquinaLocal));
-  });
+    lista.forEach((m, index) => {
+      const maquinaLocal = {
+        id: 100 + index,
+        nombre: m.nombre,
+        codigo: m.serie,
+        imagen: "./imagenes/registro.png"
+      };
+      cont.appendChild(crearCard(maquinaLocal, true, index));
+    });
+  }
 }
-
-// function renderCatalogo() {
-//   const cont = document.getElementById("catalogoLista");
-//   if (!cont) return;
-
-//   cont.innerHTML = "";
-//   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
-// }
 
 function verDetalle(id) {
   window.location.href = `detalle.html?id=${id}`;
@@ -109,36 +120,6 @@ imgDetalle.onclick = () => abrirImagen(m.imagen);
   document.getElementById("detalle-codigo").textContent = m.codigo;
   document.getElementById("detalle-descripcion").textContent = m.descripcion;
 }
-
-// function cargarDetalle() {
-//   const params = new URLSearchParams(window.location.search);
-//   const id = parseInt(params.get("id"));
-
-//   const cont = document.getElementById("detalleCont");
-//   if (!cont) return;
-
-//   const m = maquinasDB.find(x => x.id === id);
-//   if (!m) {
-//     cont.innerHTML = "<p>No se encontró información de la máquina.</p>";
-//     return;
-//   }
-
-//   cont.innerHTML = `
-//     <div class="card shadow">
-//       <img src="${m.imagen}" class="card-img-top detalle-img">
-//       <div class="card-body">
-//         <h3>${m.nombre}</h3>
-//         <p><strong>Tecnología:</strong> ${m.tecnologia}</p>
-//         <p><strong>Materiales:</strong> ${m.materiales}</p>
-//         <p><strong>Código:</strong> ${m.codigo}</p>
-//         <p>${m.descripcion}</p>
-//         <button class="btn btn-secondary w-100 mt-3" onclick="window.location.href='catalogo.html'">
-//           Volver al catálogo
-//         </button>
-//       </div>
-//     </div>
-//   `;
-// }
 
 function buscarPorSerie() {
   const serie = document.getElementById("inputSerie").value.toLowerCase();
@@ -203,3 +184,4 @@ function abrirImagen(src) {
 function cerrarImagen() {
   document.getElementById("visorImagen").style.display = "none";
 }
+
