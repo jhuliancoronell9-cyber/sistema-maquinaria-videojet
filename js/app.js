@@ -62,7 +62,7 @@ function eliminarMaquina(index) {
   renderListaRegistradas();
 }
 
-// Renderizar catálogo
+// Renderizar catálogo (DB + locales)
 function renderCatalogo() {
   const cont = document.getElementById("catalogoLista");
   if (!cont) return;
@@ -72,7 +72,6 @@ function renderCatalogo() {
   const tituloBase = document.createElement("h3");
   tituloBase.textContent = "Catálogo";
   cont.appendChild(tituloBase);
-
   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
 
   // Máquinas registradas
@@ -87,8 +86,11 @@ function renderCatalogo() {
       const maquinaLocal = {
         id: 100 + index,
         nombre: m.nombre,
-        codigo: m.serie,
-        imagen: "./imagenes/registro.png"
+        codigo: m.serie || "N/A",
+        imagen: "./imagenes/registro.png",
+        tecnologia: m.tipo || "",
+        materiales: m.materiales || "N/A",
+        descripcion: m.descripcion || "Registrada por el usuario"
       };
       cont.appendChild(crearCard(maquinaLocal, true, index));
     });
@@ -106,7 +108,7 @@ function renderListaRegistradas() {
     const maquinaLocal = {
       id: 100 + index,
       nombre: m.nombre,
-      codigo: m.serie,
+      codigo: m.serie || "N/A",
       imagen: "./imagenes/registro.png"
     };
     cont.appendChild(crearRegistroItem(maquinaLocal, index));
@@ -131,11 +133,11 @@ function cargarDetalle() {
       m = {
         id,
         nombre: lista[localIndex].nombre,
-        codigo: lista[localIndex].serie,
+        codigo: lista[localIndex].serie || "N/A",
         imagen: "./imagenes/registro.png",
         tecnologia: lista[localIndex].tipo || "",
-        materiales: "N/A",
-        descripcion: "Registrada por el usuario"
+        materiales: lista[localIndex].materiales || "N/A",
+        descripcion: lista[localIndex].descripcion || "Registrada por el usuario"
       };
     }
   }
@@ -169,7 +171,7 @@ function cerrarImagen() {
   if (visor) visor.style.display = "none";
 }
 
-// ===================== BÚSQUEDAS CORREGIDAS =====================
+// ===================== BÚSQUEDAS =====================
 
 // Buscar por serie
 function buscarPorSerie() {
@@ -185,11 +187,11 @@ function buscarPorSerie() {
       .map((m, i) => ({
         id: 100 + i,
         nombre: m.nombre,
-        codigo: m.serie,
+        codigo: m.serie || "N/A",
         imagen: "./imagenes/registro.png",
         tecnologia: m.tipo || "",
-        materiales: "N/A",
-        descripcion: "Registrada por el usuario"
+        materiales: m.materiales || "N/A",
+        descripcion: m.descripcion || "Registrada por el usuario"
       }))
       .filter(m => m.codigo.toLowerCase().includes(serieInput))
   ];
@@ -225,16 +227,16 @@ function buscarAvanzado() {
       .map((m, i) => ({
         id: 100 + i,
         nombre: m.nombre,
-        codigo: m.serie,
+        codigo: m.serie || "N/A",
         imagen: "./imagenes/registro.png",
         tecnologia: m.tipo || "",
-        materiales: "N/A",
-        descripcion: "Registrada por el usuario"
+        materiales: m.materiales || "N/A",
+        descripcion: m.descripcion || "Registrada por el usuario"
       }))
       .filter(m =>
-        (!tipo || (m.tecnologia || "").toLowerCase().includes(tipo) || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
+        (!tipo || (m.tecnologia || "").toLowerCase().includes(tipo)) &&
         (!tecnologia || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
-        (!material || (m.material || "").toLowerCase().includes(material))
+        (!material || (m.materiales || "").toLowerCase().includes(material))
       )
   ];
 
