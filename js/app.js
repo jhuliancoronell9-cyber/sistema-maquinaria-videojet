@@ -37,30 +37,162 @@ function crearCard(m, isLocal = false, index = null) {
   return col;
 }
 
-// Buscar por serie incluyendo máquinas locales
+// Crear item lateral para registro
+function crearRegistroItem(m, index) {
+  const div = document.createElement("div");
+  div.className = "registro-item d-flex align-items-center mb-2";
+  div.onclick = () => verDetalle(100 + index);
+
+  div.innerHTML = `
+    <img src="${m.imagen}" class="registro-img rounded-circle me-2" alt="${m.nombre}">
+    <div>
+      <div>${m.nombre}</div>
+      <div class="text-muted" style="font-size: 12px;">${m.codigo}</div>
+    </div>
+  `;
+  return div;
+}
+
+// Eliminar máquina local
+function eliminarMaquina(index) {
+  let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+  lista.splice(index, 1);
+  localStorage.setItem("maquinas", JSON.stringify(lista));
+  renderCatalogo();
+  renderListaRegistradas();
+}
+
+// Renderizar catálogo
+function renderCatalogo() {
+  const cont = document.getElementById("catalogoLista");
+  if (!cont) return;
+  cont.innerHTML = "";
+
+  // Catálogo base
+  const tituloBase = document.createElement("h3");
+  tituloBase.textContent = "Catálogo";
+  cont.appendChild(tituloBase);
+
+  maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
+
+  // Máquinas registradas
+  const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+  if (lista.length > 0) {
+    const tituloLocal = document.createElement("h3");
+    tituloLocal.textContent = "Máquinas Registradas";
+    tituloLocal.className = "mt-4 text-success";
+    cont.appendChild(tituloLocal);
+
+    lista.forEach((m, index) => {
+      const maquinaLocal = {
+        id: 100 + index,
+        nombre: m.nombre,
+        codigo: m.serie,
+        imagen: "./imagenes/registro.png"
+      };
+      cont.appendChild(crearCard(maquinaLocal, true, index));
+    });
+  }
+}
+
+// Renderizar lista lateral en registro.html
+function renderListaRegistradas() {
+  const cont = document.getElementById("listaRegistradas");
+  if (!cont) return;
+
+  cont.innerHTML = "";
+  const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+  lista.forEach((m, index) => {
+    const maquinaLocal = {
+      id: 100 + index,
+      nombre: m.nombre,
+      codigo: m.serie,
+      imagen: "./imagenes/registro.png"
+    };
+    cont.appendChild(crearRegistroItem(maquinaLocal, index));
+  });
+}
+
+// Ver detalle
+function verDetalle(id) {
+  window.location.href = `detalle.html?id=${id}`;
+}
+
+// Cargar detalle
+function cargarDetalle() {
+  const params = new URLSearchParams(window.location.search);
+  const id = parseInt(params.get("id"));
+  let m = maquinasDB.find(x => x.id === id);
+
+  if (!m && id >= 100) {
+    const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+    const localIndex = id - 100;
+    if (lista[localIndex]) {
+      m = {
+        id,
+        nombre: lista[localIndex].nombre,
+        codigo: lista[localIndex].serie,
+        imagen: "./imagenes/registro.png",
+        tecnologia: lista[localIndex].tipo || "",
+        materiales: "N/A",
+        descripcion: "Registrada por el usuario"
+      };
+    }
+  }
+
+  if (!m) return;
+
+  const imgDetalle = document.getElementById("detalle-imagen");
+  if (imgDetalle) {
+    imgDetalle.src = m.imagen;
+    imgDetalle.onclick = () => abrirImagen(m.imagen);
+  }
+
+  const nombres = ["detalle-nombre","detalle-tecnologia","detalle-materiales","detalle-codigo","detalle-descripcion"];
+  const valores = [m.nombre, m.tecnologia, m.materiales, m.codigo, m.descripcion];
+  nombres.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = valores[i];
+  });
+}
+
+// Visor de imagen
+function abrirImagen(src) {
+  const visor = document.getElementById("visorImagen");
+  const img = document.getElementById("imagenGrande");
+  if (!visor || !img) return;
+  img.src = src;
+  visor.style.display = "flex";
+}
+function cerrarImagen() {
+  const visor = document.getElementById("visorImagen");
+  if (visor) visor.style.display = "none";
+}
+
+// ===================== BÚSQUEDAS CORREGIDAS =====================
+
+// Buscar por serie
 function buscarPorSerie() {
   const serieInput = document.getElementById("inputSerie").value.toLowerCase();
   const cont = document.getElementById("resultadoSerie");
   cont.innerHTML = "";
 
-  // Buscar en base de datos
-  let resultados = maquinasDB.filter(m => m.codigo.toLowerCase().includes(serieInput));
-
-  // Buscar en localStorage
   const listaLocal = JSON.parse(localStorage.getItem("maquinas")) || [];
-  listaLocal.forEach((m, index) => {
-    if ((m.serie || "").toLowerCase().includes(serieInput)) {
-      resultados.push({
-        id: 100 + index,
+
+  const resultados = [
+    ...maquinasDB.filter(m => m.codigo.toLowerCase().includes(serieInput)),
+    ...listaLocal
+      .map((m, i) => ({
+        id: 100 + i,
         nombre: m.nombre,
         codigo: m.serie,
         imagen: "./imagenes/registro.png",
         tecnologia: m.tipo || "",
         materiales: "N/A",
         descripcion: "Registrada por el usuario"
-      });
-    }
-  });
+      }))
+      .filter(m => m.codigo.toLowerCase().includes(serieInput))
+  ];
 
   if (resultados.length === 0) {
     cont.innerHTML = "<p>No se encontraron resultados.</p>";
@@ -73,7 +205,7 @@ function buscarPorSerie() {
   cont.appendChild(row);
 }
 
-// Búsqueda avanzada incluyendo máquinas locales
+// Búsqueda avanzada
 function buscarAvanzado() {
   const tipo = (document.getElementById("tipo").value || "").toLowerCase();
   const tecnologia = (document.getElementById("tecnologia").value || "").toLowerCase();
@@ -81,36 +213,30 @@ function buscarAvanzado() {
   const cont = document.getElementById("resultadosAvanzados");
   cont.innerHTML = "";
 
-  let resultados = [];
+  const listaLocal = JSON.parse(localStorage.getItem("maquinas")) || [];
 
-  // Base de datos
-  maquinasDB.forEach(m => {
-    if (
+  const resultados = [
+    ...maquinasDB.filter(m =>
       (!tipo || m.tipo.toLowerCase().includes(tipo)) &&
       (!tecnologia || m.tecnologia.toLowerCase().includes(tecnologia)) &&
       (!material || m.materiales.toLowerCase().includes(material))
-    ) resultados.push(m);
-  });
-
-  // LocalStorage
-  const listaLocal = JSON.parse(localStorage.getItem("maquinas")) || [];
-  listaLocal.forEach((m, index) => {
-    if (
-      (!tipo || (m.tipo || "").toLowerCase().includes(tipo)) &&
-      (!tecnologia || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
-      (!material || (m.material || "").toLowerCase().includes(material))
-    ) {
-      resultados.push({
-        id: 100 + index,
+    ),
+    ...listaLocal
+      .map((m, i) => ({
+        id: 100 + i,
         nombre: m.nombre,
         codigo: m.serie,
         imagen: "./imagenes/registro.png",
         tecnologia: m.tipo || "",
         materiales: "N/A",
         descripcion: "Registrada por el usuario"
-      });
-    }
-  });
+      }))
+      .filter(m =>
+        (!tipo || (m.tecnologia || "").toLowerCase().includes(tipo) || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
+        (!tecnologia || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
+        (!material || (m.material || "").toLowerCase().includes(material))
+      )
+  ];
 
   if (resultados.length === 0) {
     cont.innerHTML = "<p>No hay coincidencias.</p>";
@@ -122,3 +248,10 @@ function buscarAvanzado() {
   resultados.forEach(m => row.appendChild(crearCard(m, m.id >= 100, m.id >= 100 ? m.id - 100 : null)));
   cont.appendChild(row);
 }
+
+// ===================== INICIALIZAR =====================
+document.addEventListener("DOMContentLoaded", () => {
+  renderCatalogo();
+  renderListaRegistradas();
+  cargarDetalle();
+});
