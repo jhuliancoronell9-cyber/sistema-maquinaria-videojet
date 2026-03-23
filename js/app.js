@@ -1,44 +1,16 @@
 // ===================== BASE DE DATOS DE MÁQUINAS =====================
 const maquinasDB = [
-  {
-    id: 0,
-    nombre: "Videojet CIJ 1880",
-    tipo: "CIJ",
-    tecnologia: "Inyección continua (CIJ)",
-    materiales: "Plástico, Vidrio, Metal pintado",
-    codigo: "1880-CIJ-VID",
-    imagen: "./imagenes/cij-1880.png",
-    descripcion: "Sistema de codificación CIJ de alta velocidad, ideal para líneas de producción."
-  },
-  {
-    id: 1,
-    nombre: "Videojet Laser 3350",
-    tipo: "Láser",
-    tecnologia: "Marcado láser",
-    materiales: "Plástico, Metal, Cartón",
-    codigo: "3350-LAS-VID",
-    imagen: "./imagenes/laser-3350.png",
-    descripcion: "Marcadora láser robusta para trazabilidad y codificación permanente."
-  },
-  {
-    id: 2,
-    nombre: "Videojet Wolke M610",
-    tipo: "TIJ",
-    tecnologia: "Tinta térmica (TIJ)",
-    materiales: "Papel, Cartón, Etiquetas",
-    codigo: "M610-TIJ-VID",
-    imagen: "./imagenes/wolke-m610.png",
-    descripcion: "Impresora térmica Wolke M610 para códigos de alta resolución en empaques."
-  }
+  { id: 0, nombre: "Videojet CIJ 1880", tipo: "CIJ", tecnologia: "Inyección continua (CIJ)", materiales: "Plástico, Vidrio, Metal pintado", codigo: "1880-CIJ-VID", imagen: "./imagenes/cij-1880.png", descripcion: "Sistema de codificación CIJ de alta velocidad, ideal para líneas de producción." },
+  { id: 1, nombre: "Videojet Laser 3350", tipo: "Láser", tecnologia: "Marcado láser", materiales: "Plástico, Metal, Cartón", codigo: "3350-LAS-VID", imagen: "./imagenes/laser-3350.png", descripcion: "Marcadora láser robusta para trazabilidad y codificación permanente." },
+  { id: 2, nombre: "Videojet Wolke M610", tipo: "TIJ", tecnologia: "Tinta térmica (TIJ)", materiales: "Papel, Cartón, Etiquetas", codigo: "M610-TIJ-VID", imagen: "./imagenes/wolke-m610.png", descripcion: "Impresora térmica Wolke M610 para códigos de alta resolución en empaques." }
 ];
 
 // ===================== FUNCIONES =====================
 
-// ----- Crear tarjeta para catálogo y resultados -----
+// Crear tarjeta
 function crearCard(m, isLocal = false, index = null) {
   const col = document.createElement("div");
   col.className = "col-md-4 mb-4";
-
   const cardClass = isLocal ? "card shadow-sm h-100 border border-success" : "card shadow-sm h-100";
 
   col.innerHTML = `
@@ -65,148 +37,30 @@ function crearCard(m, isLocal = false, index = null) {
   return col;
 }
 
-// ----- Crear item lateral para registro (panel derecho) -----
-function crearRegistroItem(m, index) {
-  const div = document.createElement("div");
-  div.className = "registro-item d-flex align-items-center mb-2";
-  div.onclick = () => verDetalle(100 + index); // ID local
-
-  div.innerHTML = `
-    <img src="${m.imagen}" class="registro-img rounded-circle me-2" alt="${m.nombre}">
-    <div>
-      <div>${m.nombre}</div>
-      <div class="text-muted" style="font-size: 12px;">${m.codigo}</div>
-    </div>
-  `;
-  return div;
-}
-
-// ----- Eliminar máquina local -----
-function eliminarMaquina(index) {
-  let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-  lista.splice(index, 1);
-  localStorage.setItem("maquinas", JSON.stringify(lista));
-  renderCatalogo();
-  renderListaRegistradas(); // actualizar lista lateral si existe
-}
-
-// ----- Renderizar catálogo -----
-function renderCatalogo() {
-  const cont = document.getElementById("catalogoLista");
-  if (!cont) return;
-  cont.innerHTML = "";
-
-  // Catálogo base
-  const tituloBase = document.createElement("h3");
-  tituloBase.textContent = "Catálogo";
-  cont.appendChild(tituloBase);
-
-  maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
-
-  // Máquinas registradas
-  const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-  if (lista.length > 0) {
-    const tituloLocal = document.createElement("h3");
-    tituloLocal.textContent = "Máquinas Registradas";
-    tituloLocal.className = "mt-4 text-success";
-    cont.appendChild(tituloLocal);
-
-    lista.forEach((m, index) => {
-      const maquinaLocal = {
-        id: 100 + index,
-        nombre: m.nombre,
-        codigo: m.serie,
-        imagen: "./imagenes/registro.png"
-      };
-      cont.appendChild(crearCard(maquinaLocal, true, index));
-    });
-  }
-}
-
-// ----- Renderizar lista lateral en registro.html -----
-function renderListaRegistradas() {
-  const cont = document.getElementById("listaRegistradas");
-  if (!cont) return;
-
-  cont.innerHTML = "";
-  const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-  lista.forEach((m, index) => {
-    const maquinaLocal = {
-      id: 100 + index,
-      nombre: m.nombre,
-      codigo: m.serie,
-      imagen: "./imagenes/registro.png"
-    };
-    cont.appendChild(crearRegistroItem(maquinaLocal, index));
-  });
-}
-
-// ----- Ver detalle -----
-function verDetalle(id) {
-  window.location.href = `detalle.html?id=${id}`;
-}
-
-// ----- Cargar detalle -----
-function cargarDetalle() {
-  const params = new URLSearchParams(window.location.search);
-  const id = parseInt(params.get("id"));
-  let m = maquinasDB.find(x => x.id === id);
-
-  if (!m && id >= 100) {
-    // Máquina local
-    const lista = JSON.parse(localStorage.getItem("maquinas")) || [];
-    const localIndex = id - 100;
-    if (lista[localIndex]) {
-      m = {
-        id,
-        nombre: lista[localIndex].nombre,
-        codigo: lista[localIndex].serie,
-        imagen: "./imagenes/registro.png",
-        tecnologia: lista[localIndex].tipo || "",
-        materiales: "N/A",
-        descripcion: "Registrada por el usuario"
-      };
-    }
-  }
-
-  if (!m) return;
-
-  const imgDetalle = document.getElementById("detalle-imagen");
-  if (imgDetalle) {
-    imgDetalle.src = m.imagen;
-    imgDetalle.onclick = () => abrirImagen(m.imagen);
-  }
-
-  const nombres = ["detalle-nombre","detalle-tecnologia","detalle-materiales","detalle-codigo","detalle-descripcion"];
-  const valores = [m.nombre, m.tecnologia, m.materiales, m.codigo, m.descripcion];
-  nombres.forEach((id, i) => {
-    const el = document.getElementById(id);
-    if(el) el.textContent = valores[i];
-  });
-}
-
-// ----- Visor de imagen -----
-function abrirImagen(src) {
-  const visor = document.getElementById("visorImagen");
-  const img = document.getElementById("imagenGrande");
-  if (!visor || !img) return;
-  img.src = src;
-  visor.style.display = "flex";
-}
-function cerrarImagen() {
-  const visor = document.getElementById("visorImagen");
-  if (visor) visor.style.display = "none";
-}
-
-// ----- Buscar por serie -----
+// Buscar por serie incluyendo máquinas locales
 function buscarPorSerie() {
-  const serie = document.getElementById("inputSerie").value.toLowerCase();
+  const serieInput = document.getElementById("inputSerie").value.toLowerCase();
   const cont = document.getElementById("resultadoSerie");
   cont.innerHTML = "";
 
-  const resultados = maquinasDB.filter(m =>
-    m.codigo.toLowerCase().includes(serie)
-  );
+  // Buscar en base de datos
+  let resultados = maquinasDB.filter(m => m.codigo.toLowerCase().includes(serieInput));
+
+  // Buscar en localStorage
+  const listaLocal = JSON.parse(localStorage.getItem("maquinas")) || [];
+  listaLocal.forEach((m, index) => {
+    if ((m.serie || "").toLowerCase().includes(serieInput)) {
+      resultados.push({
+        id: 100 + index,
+        nombre: m.nombre,
+        codigo: m.serie,
+        imagen: "./imagenes/registro.png",
+        tecnologia: m.tipo || "",
+        materiales: "N/A",
+        descripcion: "Registrada por el usuario"
+      });
+    }
+  });
 
   if (resultados.length === 0) {
     cont.innerHTML = "<p>No se encontraron resultados.</p>";
@@ -215,24 +69,48 @@ function buscarPorSerie() {
 
   const row = document.createElement("div");
   row.className = "row";
-  resultados.forEach(m => row.appendChild(crearCard(m)));
+  resultados.forEach(m => row.appendChild(crearCard(m, m.id >= 100, m.id >= 100 ? m.id - 100 : null)));
   cont.appendChild(row);
 }
 
-// ----- Buscar avanzado -----
+// Búsqueda avanzada incluyendo máquinas locales
 function buscarAvanzado() {
-  const tipo = document.getElementById("tipo").value.toLowerCase();
-  const tecnologia = document.getElementById("tecnologia").value.toLowerCase();
-  const material = document.getElementById("material").value.toLowerCase();
-
+  const tipo = (document.getElementById("tipo").value || "").toLowerCase();
+  const tecnologia = (document.getElementById("tecnologia").value || "").toLowerCase();
+  const material = (document.getElementById("material").value || "").toLowerCase();
   const cont = document.getElementById("resultadosAvanzados");
   cont.innerHTML = "";
 
-  const resultados = maquinasDB.filter(m =>
-    (!tipo || m.tipo.toLowerCase() === tipo) &&
-    (!tecnologia || m.tecnologia.toLowerCase().includes(tecnologia)) &&
-    (!material || m.materiales.toLowerCase().includes(material))
-  );
+  let resultados = [];
+
+  // Base de datos
+  maquinasDB.forEach(m => {
+    if (
+      (!tipo || m.tipo.toLowerCase().includes(tipo)) &&
+      (!tecnologia || m.tecnologia.toLowerCase().includes(tecnologia)) &&
+      (!material || m.materiales.toLowerCase().includes(material))
+    ) resultados.push(m);
+  });
+
+  // LocalStorage
+  const listaLocal = JSON.parse(localStorage.getItem("maquinas")) || [];
+  listaLocal.forEach((m, index) => {
+    if (
+      (!tipo || (m.tipo || "").toLowerCase().includes(tipo)) &&
+      (!tecnologia || (m.tecnologia || "").toLowerCase().includes(tecnologia)) &&
+      (!material || (m.material || "").toLowerCase().includes(material))
+    ) {
+      resultados.push({
+        id: 100 + index,
+        nombre: m.nombre,
+        codigo: m.serie,
+        imagen: "./imagenes/registro.png",
+        tecnologia: m.tipo || "",
+        materiales: "N/A",
+        descripcion: "Registrada por el usuario"
+      });
+    }
+  });
 
   if (resultados.length === 0) {
     cont.innerHTML = "<p>No hay coincidencias.</p>";
@@ -241,13 +119,6 @@ function buscarAvanzado() {
 
   const row = document.createElement("div");
   row.className = "row";
-  resultados.forEach(m => row.appendChild(crearCard(m)));
+  resultados.forEach(m => row.appendChild(crearCard(m, m.id >= 100, m.id >= 100 ? m.id - 100 : null)));
   cont.appendChild(row);
 }
-
-// ===================== EVENTO PRINCIPAL =====================
-document.addEventListener("DOMContentLoaded", () => {
-  renderCatalogo();
-  renderListaRegistradas();
-  cargarDetalle();
-});
