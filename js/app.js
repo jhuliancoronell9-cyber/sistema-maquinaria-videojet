@@ -56,8 +56,32 @@ function renderCatalogo() {
   if (!cont) return;
 
   cont.innerHTML = "";
+
+  // Máquinas base
   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
+
+  // Máquinas registradas por el usuario
+  let lista = JSON.parse(localStorage.getItem("maquinas")) || [];
+
+  lista.forEach((m, index) => {
+    const maquinaLocal = {
+      id: 100 + index,
+      nombre: m.nombre,
+      codigo: m.serie,
+      imagen: "./imagenes/cij-1880.png"
+    };
+
+    cont.appendChild(crearCard(maquinaLocal));
+  });
 }
+
+// function renderCatalogo() {
+//   const cont = document.getElementById("catalogoLista");
+//   if (!cont) return;
+
+//   cont.innerHTML = "";
+//   maquinasDB.forEach(m => cont.appendChild(crearCard(m)));
+// }
 
 function verDetalle(id) {
   window.location.href = `detalle.html?id=${id}`;
