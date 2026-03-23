@@ -138,6 +138,17 @@ footer {
 .card-text {
   font-size: 14px;
   margin-bottom: 8px;
+
+  /* Diferenciar máquinas registradas */
+#catalogoLista h3.text-success {
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 5px;
+  margin-top: 40px;
+}
+
+#catalogoLista .card.border-success {
+  background: #eaf7ea; /* verde muy claro */
+}
 }
 
 /* título más compacto */
